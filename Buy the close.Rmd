@@ -1,0 +1,119 @@
+---
+title: "Buy the close"
+author: "Brock Fassnacht"
+date: '2022-07-08'
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+### Calculations
+
+```{r}
+library(quantmod)
+
+getSymbols(Symbols="SPY",from="2000-01-01",to="2022-07-01", periodicity = "daily")
+
+SPYclose <- SPY$SPY.Close
+SPYopen <- SPY$SPY.Open
+
+#SPYopen
+#SPYclose
+
+## BUY open sell close
+
+buy_open <- log(SPYclose/SPYopen)
+
+boending_amount <- 1000
+
+bo_comp <- list()
+
+for (i in buy_open){
+  boending_amount <- boending_amount * exp(i)
+  bo_comp <- append(bo_comp, boending_amount)
+}
+
+
+#plot
+
+boplotting_values <- list()
+
+for (i in 1:floor((length(bo_comp)/21))){
+  boplotting_values <- append(boplotting_values, bo_comp[21*i])
+}
+
+
+
+
+## Buy close sell open
+buy_close <- list()
+
+for (i in 1:length(SPYclose)-1){
+  rets <- log(as.numeric(SPYopen[i+1])) - as.numeric(log(SPYclose[i]))
+  buy_close <- append(buy_close, rets)
+}
+
+bcending_amount <- 1000
+bc_comp <- list()
+
+for (i in buy_close){
+  bcending_amount <- bcending_amount * exp(i)
+  bc_comp <- append(bc_comp, bcending_amount)
+}
+
+
+
+## plot 2
+bcplotting_values <- list()
+
+for (i in 1:floor((length(bc_comp)/21))){
+  bcplotting_values <- append(bcplotting_values, bc_comp[21*i])
+}
+
+
+## Lump sum Invested
+
+baseline_returns <- 1000*exp(log(as.numeric(last(SPYclose, 1))/as.numeric(SPYopen[1])))
+
+base_plotting <- list()
+
+for (i in 1:floor(length(SPYclose)/21)){
+  base_plotting <- append(base_plotting, as.numeric(SPYclose[21*i]))
+}
+```
+
+# Buying the Close Selling the open
+
+```{r}
+## Average Annual Returns
+252 * mean(as.numeric(buy_close))
+
+## $1000 buying close and selling open
+plot(index(bcplotting_values), bcplotting_values, type = 'l', xlab = 'Months', ylab = 'Holdings', main = 'Buy close Sell open')
+
+bcending_amount
+
+```
+# Buying Open Selling Close
+```{r}
+## Average Annual Returns
+252* mean(as.numeric(buy_open))
+
+plot(index(boplotting_values), boplotting_values, type = 'l', xlab = 'Months', ylab = 'Holdings', main = 'Buy open sell close')
+
+boending_amount
+```
+
+# $1000 Lump Sum investment
+```{r}
+## Average annual returns
+
+252*log(as.numeric(last(SPYclose, 1))/as.numeric(SPYopen[1]))/length(SPYclose)
+
+plot(index(base_plotting), base_plotting, type = 'l', xlab = 'Months', ylab = 'Holdings', main = 'Lump sum buy')
+
+baseline_returns
+
+```
+
